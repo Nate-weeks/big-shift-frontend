@@ -3,12 +3,10 @@ import { Route } from "./Swap";
 
 const RouteDisplay: FC<Route> = (props): JSX.Element => {
     return (
-    <div>
-      {props.exchangeType}
-      {props.route}
-      {props.output}
-      {props.tokensName}
-      {props.logosArray}
+    <div style={{marginLeft:'20px'}}>
+      <h1>{props.exchangeType}</h1>
+      <p>{props.route}</p>
+      <p>{props.output}</p>
     </div>
     )
   };

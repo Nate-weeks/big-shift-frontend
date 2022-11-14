@@ -2,7 +2,11 @@ import {
   Flex,
   Box,
   Text,
-  Input, useDisclosure
+  Input, 
+  useDisclosure,
+  Grid,
+  GridItem
+
 } from "@chakra-ui/react";
 
 import { SettingsIcon, ChevronDownIcon, ArrowDownIcon } from '@chakra-ui/icons';
@@ -24,6 +28,8 @@ export interface Route {
 export default function Swap() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [value, setValue] = useState<number>(0);
+  const [uniRoutes, setUniRoutes] = useState<Route[]>([])
+  const [balRoutes, setBalRoutes] = useState<Route[]>([])
   const [routes, setRoutes] = useState<Route[]>([])
 
   function getBestRoutes() {
@@ -41,8 +47,16 @@ export default function Swap() {
 
     axios.post('http://localhost:3000/aggregate-mainnet/', body).then((response) => {
       console.log(response.data)
-      let sortedResponseData: Route[] = response.data.sort((a: { output: number; }, b: { output: number; }) => a.output - b.output)
-      setRoutes(sortedResponseData.slice(-3))
+
+      let sortedUniResponseData: Route[] = response.data.filter(function(data: any){
+        return data.exchangeType == "Uniswap V2";
+      }).sort((a: { output: number; }, b: { output: number; }) => a.output - b.output)
+
+      let sortedBalResponseData: Route[] = response.data.filter(function(data: { tokenExchange: number[]; }){
+        return data.tokenExchange.includes(1) || data.tokenExchange.includes(2);
+      }).sort((a: { output: number; }, b: { output: number; }) => a.output - b.output)
+      setRoutes(sortedBalResponseData.slice(-2).concat(sortedUniResponseData.slice(-2)))
+
     }).catch((error) => {
       console.error('There was an error fetching the routes data:', error.message);
     })
@@ -51,21 +65,21 @@ export default function Swap() {
 
   const displayedRoutes = routes.map((highestrRoute) => {
     return (
-      <div>
-      <RouteDisplay
-      key={highestrRoute.output} 
-      route={highestrRoute.route}
-      exchangeType={highestrRoute.exchangeType}
-      tokensName={highestrRoute.tokensName}
-      logosArray={highestrRoute.logosArray}
-      output={highestrRoute.output}
-      />
-      </div>
+      <GridItem style={{borderRadius:'30px', marginTop:'8%', marginLeft:'13%'}}w='60%' h='100%' bg='yellow.200'>
+        <RouteDisplay
+        key={highestrRoute.output} 
+        route={highestrRoute.route}
+        exchangeType={highestrRoute.exchangeType}
+        tokensName={highestrRoute.tokensName}
+        logosArray={highestrRoute.logosArray}
+        output={highestrRoute.output}
+        />
+      </GridItem>
     )
   });
 
   return (
-
+    <div>
     <Box
       w="30.62rem"
       mx="auto"
@@ -180,7 +194,10 @@ export default function Swap() {
         </Flex>
         <SwapButton handleGetRoutes={getBestRoutes}/>
       </Box>
-      {displayedRoutes}
     </Box>
+          <Grid templateColumns='repeat(4, 1fr)' gap={0}>
+          {displayedRoutes}
+        </Grid>
+        </div>
   )
 }
